@@ -34,7 +34,6 @@ func main() {
 
 	// set the default help
 	flag.Usage = func() {
-		// fmt.Println("IMAP Scrub")
 		fmt.Printf("IMAP Scrub - https://github.com/axllent/imap-scrub\n\n")
 		fmt.Printf("Usage: %s [options] <config.yml>\n", os.Args[0])
 		fmt.Println("\nOptions:")
@@ -45,7 +44,7 @@ func main() {
 	// add options
 	flag.BoolVarP(&doActions, "yes", "y", false, "do actions (based on config rule actions)")
 	flag.BoolVarP(&listMailboxes, "mailboxes", "m", false, "list mailboxes on server (helpful for configuration)")
-	flag.BoolVarP(&printConfig, "print-config", "c", false, "print config")
+	flag.BoolVarP(&printConfig, "print-config", "p", false, "print config")
 	flag.BoolVarP(&update, "update", "u", false, "update to latest release version")
 	flag.BoolVarP(&showVersion, "version", "v", false, "show app version")
 
@@ -116,15 +115,15 @@ func main() {
 	useTrash = lib.DetectTrash(cReader)
 
 	for _, rule := range lib.Config.Rules {
-
-		// cReader.SetDebug(os.Stdout)
+		// If we are removing or saving attachments, then pull the whole message
+		// in the search
 		if doActions && (rule.RemoveAttachments() || rule.SaveAttachments()) {
 			headersOnly = false
 		}
 
 		sFilters := []string{}
 
-		// Select INBOX
+		// Select mailbox
 		mbox, err := cReader.Select(rule.Mailbox, true)
 		if err != nil {
 			lib.Log.ErrorF(err.Error())
@@ -250,7 +249,7 @@ func main() {
 			if doActions && (rule.RemoveAttachments() || rule.SaveAttachments()) {
 				raw, err := lib.HandleMessage(msg, rule)
 				if err != nil {
-					lib.Log.ErrorF("      %s", err)
+					lib.Log.ErrorF("%s", err)
 					continue
 				}
 
