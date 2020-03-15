@@ -71,17 +71,16 @@ save_path: string # local directory to save attachments (default current dir)
 use_trash: false  # see below
 rules:
   - mailbox:         string # IMAP mailbox name see below)
-	  min_size:        0      # minimum message size in kB
-	  older_than:      0      # older than x days
-	  from:            string # match "From" field
-	  to:              string # match "To" field
+    min_size:        0      # minimum message size in kB
+    older_than:      0      # older than x days
+    from:            string # match "From" field
+    to:              string # match "To" field
     subject:         string # match email subject
     body:            string # match email body
     text:            string # match email message
     actions:         string # see below
     include_unread:  false  # include unread messages (default false)
     include_starred: false  # include starrted mesages (default false)
-
 ```
 
 
