@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/axllent/ghru"
 	"github.com/axllent/imap-scrub/lib"
 	"github.com/emersion/go-imap"
 	move "github.com/emersion/go-imap-move"
@@ -21,11 +22,12 @@ var (
 	doActions     bool
 	deleteActions bool
 	useTrash      string
+	appVersion    = "dev"
 )
 
 func main() {
 	var configFile string
-	var listMailboxes, printConfig bool
+	var listMailboxes, printConfig, showVersion, update bool
 	var headersOnly = true
 
 	flag := pflag.NewFlagSet(os.Args[0], pflag.ExitOnError)
@@ -44,11 +46,31 @@ func main() {
 	flag.BoolVarP(&doActions, "yes", "y", false, "do actions (based on config rule actions)")
 	flag.BoolVarP(&listMailboxes, "mailboxes", "m", false, "list mailboxes on server (helpful for configuration)")
 	flag.BoolVarP(&printConfig, "print-config", "c", false, "print config")
+	flag.BoolVarP(&update, "update", "u", false, "update to latest release version")
+	flag.BoolVarP(&showVersion, "version", "v", false, "show app version")
 
 	flag.Parse(os.Args[1:])
 
 	// parse arguments
 	args := flag.Args()
+
+	if showVersion {
+		fmt.Println(fmt.Sprintf("Version: %s", appVersion))
+		latest, _, _, err := ghru.Latest("axllent/imap-scrub", "imap-scrub")
+		if err == nil && ghru.GreaterThan(latest, appVersion) {
+			fmt.Printf("Update available: %s\nRun `%s -u` to update.\n", latest, os.Args[0])
+		}
+		os.Exit(0)
+	}
+
+	if update {
+		rel, err := ghru.Update("axllent/imap-scrub", "imap-scrub", appVersion)
+		if err != nil {
+			lib.Log.Error(err.Error())
+		}
+		lib.Log.InfoF("Updated %s to version %s\n", os.Args[0], rel)
+		os.Exit(0)
+	}
 
 	if len(args) != 1 {
 		flag.Usage()
