@@ -21,7 +21,6 @@ var (
 	cWriter       *client.Client
 	doActions     bool
 	deleteActions bool
-	useTrash      string
 	appVersion    = "dev"
 )
 
@@ -112,11 +111,14 @@ func main() {
 		os.Exit(0)
 	}
 
-	useTrash = lib.DetectTrash(cReader)
+	trashMailbox, err := lib.DetectTrash(cReader)
+	if err != nil {
+		lib.Log.Error(err.Error())
+		os.Exit(2)
+	}
 
 	for _, rule := range lib.Config.Rules {
-		// If we are removing or saving attachments, then pull the whole message
-		// in the search
+		// If we are removing or saving attachments, then pull the whole message in the search
 		if doActions && (rule.RemoveAttachments() || rule.SaveAttachments()) {
 			headersOnly = false
 		}
@@ -269,10 +271,10 @@ func main() {
 				seqSet := new(imap.SeqSet)
 				seqSet.AddNum(msg.Uid)
 
-				if useTrash != "" {
+				if trashMailbox != "" {
 					// move to Bin
 					mover := move.NewClient(cWriter)
-					if err := mover.UidMove(seqSet, useTrash); err != nil {
+					if err := mover.UidMove(seqSet, trashMailbox); err != nil {
 						lib.Log.ErrorF(err.Error())
 						continue
 					}

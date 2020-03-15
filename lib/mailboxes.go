@@ -1,6 +1,8 @@
 package lib
 
 import (
+	"fmt"
+
 	"github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
 )
@@ -27,13 +29,9 @@ func ListMailboxes(cReader *client.Client) {
 
 // DetectTrash will return the trash folder of a Gmail account, if appliccable
 // Gmail only supports moving to the trash
-func DetectTrash(cReader *client.Client) string {
-	// if Config.Host != "imap.gmail.com" {
-	// 	return ""
-	// }
-
+func DetectTrash(cReader *client.Client) (string, error) {
 	if !Config.UseTrash && Config.Host != "imap.gmail.com" {
-		return ""
+		return "", nil
 	}
 
 	mailboxes := make(chan *imap.MailboxInfo, 10)
@@ -45,9 +43,9 @@ func DetectTrash(cReader *client.Client) string {
 	for m := range mailboxes {
 		if InStringSlice("\\Trash", m.Attributes) {
 			Log.DebugF("Deleted messages will be moved to \"%s\"", m.Name)
-			return m.Name
+			return m.Name, nil
 		}
 	}
 
-	return ""
+	return "", fmt.Errorf("No trash mailbox detected")
 }
