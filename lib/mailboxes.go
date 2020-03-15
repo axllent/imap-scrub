@@ -1,0 +1,53 @@
+package lib
+
+import (
+	"github.com/emersion/go-imap"
+	"github.com/emersion/go-imap/client"
+)
+
+// ListMailboxes returns a list of Mailboxs on the server
+func ListMailboxes(cReader *client.Client) {
+	mailboxes := make(chan *imap.MailboxInfo, 10)
+	done := make(chan error, 1)
+	go func() {
+		done <- cReader.List("", "*", mailboxes)
+	}()
+
+	Log.InfoF("Mailboxes on %s\n", Config.Name)
+	for m := range mailboxes {
+		if !InStringSlice("\\Noselect", m.Attributes) {
+			Log.Info(" - " + m.Name)
+		}
+	}
+
+	if err := <-done; err != nil {
+		Log.ErrorF("%v\n", err)
+	}
+}
+
+// DetectTrash will return the trash folder of a Gmail account, if appliccable
+// Gmail only supports moving to the trash
+func DetectTrash(cReader *client.Client) string {
+	// if Config.Host != "imap.gmail.com" {
+	// 	return ""
+	// }
+
+	if !Config.UseTrash && Config.Host != "imap.gmail.com" {
+		return ""
+	}
+
+	mailboxes := make(chan *imap.MailboxInfo, 10)
+	done := make(chan error, 1)
+	go func() {
+		done <- cReader.List("", "*", mailboxes)
+	}()
+
+	for m := range mailboxes {
+		if InStringSlice("\\Trash", m.Attributes) {
+			Log.DebugF("Deleted messages will be moved to \"%s\"", m.Name)
+			return m.Name
+		}
+	}
+
+	return ""
+}
