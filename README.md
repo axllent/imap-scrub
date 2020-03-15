@@ -86,7 +86,9 @@ rules:
 
 ### Option: `mailbox`
 
-The mailbox you wish to search. On standard IMAP servers this is probably `INBOX`. On Gmail this is possibly `[Gmail]/All Mail` or `[Google Mail]/All Mail`, but may differ based on your selected language. To list the mailboxes on your IMAP server to make a choice, run `imap-scrub -m <your-config.yml>` which will print out all mailboxes in your account.
+The mailbox you wish to search. On standard IMAP servers this is probably `INBOX`. 
+
+On Gmail this is possibly `[Gmail]/All Mail` or `[Google Mail]/All Mail`, but may differ based on your selected language. To list the mailboxes on your IMAP server to make a choice, run `imap-scrub -m <your-config.yml>` which will print out all mailboxes in your account.
 
 
 ### Option: `use_trash`
@@ -102,4 +104,6 @@ There are three possible actions, namely:
 - `remove_attachments` will remove the all attachments and inline images from the original email 
 - `delete` will simply delete the email
 
-`actions:` can include a combination of `save_attachments` and one other (comma-separated), eg :`actions: save_attachments, remove atachments`. Note that you cannot combine `remove_attachments` and `delete`)
+The `actions:` config may include a combination of `save_attachments` and one other (comma-separated), eg :`actions: save_attachments, remove atachments`. 
+
+**Note** that you cannot combine `remove_attachments` and `delete`.
