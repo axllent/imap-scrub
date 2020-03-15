@@ -23,8 +23,8 @@ var (
 type YamlConfig struct {
 	Name     string `yaml:"name"`
 	Host     string `yaml:"host"`
-	Port     *int   `yaml:"port"`
 	SSL      *bool  `yaml:"ssl"`
+	Port     *int   `yaml:"port"`
 	User     string `yaml:"user"`
 	Pass     string `yaml:"pass"`
 	SavePath string `yaml:"save_path"`
@@ -72,7 +72,10 @@ func ReadConfig(file string) {
 	}
 
 	if Config.Port == nil {
-		port := 993
+		port := 143
+		if *Config.SSL {
+			port = 993
+		}
 		Config.Port = &port
 	}
 
