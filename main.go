@@ -54,10 +54,10 @@ func main() {
 	args := flag.Args()
 
 	if showVersion {
-		fmt.Println(fmt.Sprintf("Version: %s", appVersion))
+		lib.Log.InfoF("Version: %s", appVersion)
 		latest, _, _, err := ghru.Latest("axllent/imap-scrub", "imap-scrub")
 		if err == nil && ghru.GreaterThan(latest, appVersion) {
-			fmt.Printf("Update available: %s\nRun `%s -u` to update.\n", latest, os.Args[0])
+			lib.Log.InfoF("Update available: %s\nRun `%s -u` to update.", latest, os.Args[0])
 		}
 		os.Exit(0)
 	}
@@ -67,7 +67,7 @@ func main() {
 		if err != nil {
 			lib.Log.Error(err.Error())
 		}
-		lib.Log.InfoF("Updated %s to version %s\n", os.Args[0], rel)
+		lib.Log.InfoF("Updated %s to version %s", os.Args[0], rel)
 		os.Exit(0)
 	}
 
