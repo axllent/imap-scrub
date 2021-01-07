@@ -104,6 +104,6 @@ There are three possible actions, namely:
 - `remove_attachments` will remove the all attachments and inline images from the original email 
 - `delete` will simply delete the email
 
-The `actions:` config may include a combination of `save_attachments` and one other (comma-separated), eg :`actions: save_attachments, remove atachments`. 
+The `actions:` config may include a combination of `save_attachments` and one other (comma-separated), eg :`actions: save_attachments, remove_atachments`. 
 
 **Note** that you cannot combine `remove_attachments` and `delete`.
