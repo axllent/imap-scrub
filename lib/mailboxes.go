@@ -40,12 +40,19 @@ func DetectTrash(cReader *client.Client) (string, error) {
 		done <- cReader.List("", "*", mailboxes)
 	}()
 
+	var trashMailbox = ""
 	for m := range mailboxes {
 		if InStringSlice("\\Trash", m.Attributes) {
 			Log.DebugF("Deleted messages will be moved to \"%s\"", m.Name)
-			return m.Name, nil
+			trashMailbox = m.Name
+			//break
 		}
 	}
-
+	if err := <-done; err != nil {
+		Log.ErrorF("%v\n", err)
+	}
+	if trashMailbox != "" {
+		return trashMailbox, nil
+	}
 	return "", fmt.Errorf("No trash mailbox detected")
 }
