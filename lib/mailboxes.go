@@ -1,8 +1,6 @@
 package lib
 
 import (
-	"fmt"
-
 	"github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
 )
@@ -45,14 +43,16 @@ func DetectTrash(cReader *client.Client) (string, error) {
 		if InStringSlice("\\Trash", m.Attributes) {
 			Log.DebugF("Deleted messages will be moved to \"%s\"", m.Name)
 			trashMailbox = m.Name
-			//break
 		}
 	}
+
 	if err := <-done; err != nil {
 		Log.ErrorF("%v\n", err)
 	}
+
 	if trashMailbox != "" {
 		return trashMailbox, nil
 	}
-	return "", fmt.Errorf("No trash mailbox detected")
+
+	return "", nil
 }
