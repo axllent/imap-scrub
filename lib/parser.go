@@ -201,7 +201,6 @@ func HandleMessage(msg *imap.Message, rule Rule) (string, error) {
 
 	if !inlineClosed {
 		iw.Close() // ensures that no further inline html/text can be written
-		inlineClosed = true
 	}
 
 	if len(deleted) > 0 {

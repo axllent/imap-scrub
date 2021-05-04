@@ -49,7 +49,7 @@ rules:
     actions: save_attachments, remove_attachments
 ```
 
-See [All config options](#all-yaml-config-options) below for more info.
+See [All yaml config options](#all-yaml-config-options) below for more info.
 
 
 ## Installing
@@ -93,7 +93,7 @@ On Gmail this is possibly `[Gmail]/All Mail` or `[Google Mail]/All Mail`, but ma
 
 ### Option: `use_trash`
 
-If `use_trash` is set to `true`, and your IMAP returns a trash mailbox, then deleted mesages will be moved into this mailbox. Note: Gmail does not support IMAP delete, so `use_trash` will always be set to `true` for Gmail.
+If `use_trash` is set to `true`, and your IMAP returns a trash mailbox, then deleted mesages will be moved into this mailbox. **Note** that Gmail does not support IMAP delete, so `use_trash` will always be set to `true` for Gmail.
 
 
 ### Option: `actions`
@@ -104,6 +104,6 @@ There are three possible actions, namely:
 - `remove_attachments` will remove the all attachments and inline images from the original email 
 - `delete` will simply delete the email
 
-The `actions:` config may include a combination of `save_attachments` and one other (comma-separated), eg :`actions: save_attachments, remove atachments`. 
+The `actions:` config may include a combination of `save_attachments` and one other (comma-separated), eg :`actions: save_attachments, remove_atachments`. 
 
 **Note** that you cannot combine `remove_attachments` and `delete`.
