@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/emersion/go-imap"
+	mboxlib "github.com/emersion/go-mbox"
 	"github.com/emersion/go-message/charset"
 	"github.com/emersion/go-message/mail"
 )
@@ -22,7 +23,7 @@ type DeletedAttachment struct {
 }
 
 // HandleMessage will process an imap message
-func HandleMessage(msg *imap.Message, rule Rule) (string, error) {
+func HandleMessage(msg *imap.Message, rule Rule, mboxWriter *mboxlib.Writer) (string, error) {
 	var section imap.BodySectionName
 
 	imap.CharsetReader = charset.Reader
@@ -37,6 +38,20 @@ func HandleMessage(msg *imap.Message, rule Rule) (string, error) {
 	r := msg.GetBody(&section)
 	if r == nil {
 		return "", fmt.Errorf("Server didn't returned message body")
+	}
+	if rule.ExportMailbox() {
+		for _, literal := range msg.Body {
+			mboxMessageWriter, err := mboxWriter.CreateMessage(msg.Envelope.From[0].MailboxName+"@"+msg.Envelope.From[0].HostName, msg.InternalDate)
+			if err != nil {
+				return "", err
+			}
+			//Log.InfoF("Name: %s", name)
+			_, err = io.Copy(mboxMessageWriter, literal)
+			if err != nil {
+				return "", err
+			}
+			Log.NoticeF(" - Exported message to local mbox")
+		}
 	}
 
 	// Create a new mail reader

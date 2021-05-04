@@ -47,6 +47,9 @@ rules:
     min_size: 512 
     older_than: 90
     actions: save_attachments, remove_attachments
+  - mailbox: "[Gmail]/All Mail"
+    from: myclient@example.com
+    actions: export_mailbox
 ```
 
 See [All yaml config options](#all-yaml-config-options) below for more info.
@@ -67,7 +70,7 @@ ssl:       true   # use SSL (default true)
 port:      993    # IMAP port number (default 993 if SSL is true, else 143)
 user:      string # IMAP username
 pass:      string # IMAP password
-save_path: string # local directory to save attachments (default current dir)
+save_path: string # local directory to save attachments and mailbox directories (default current dir)
 use_trash: false  # see below
 rules:
   - mailbox:         string # IMAP mailbox name see below)
@@ -103,6 +106,7 @@ There are three possible actions, namely:
 - `save_attachments` will save any attachments to `save_path`
 - `remove_attachments` will remove the all attachments and inline images from the original email 
 - `delete` will simply delete the email
+- `export_mailbox` will create a new `mbox` file per mailbox with all selected emails
 
 The `actions:` config may include a combination of `save_attachments` and one other (comma-separated), eg :`actions: save_attachments, remove_atachments`. 
 

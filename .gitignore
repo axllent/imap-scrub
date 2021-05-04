@@ -2,3 +2,4 @@
 /imap-scrub
 *.yml
 imap-scrub.code-workspace
+/saved-emails/

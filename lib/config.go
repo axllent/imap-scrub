@@ -16,6 +16,7 @@ var (
 		"delete":             true,
 		"save_attachments":   true,
 		"remove_attachments": true,
+		"export_mailbox":     true,
 	}
 )
 
@@ -131,4 +132,9 @@ func (r Rule) RemoveAttachments() bool {
 // SaveAttachments returns whether a rule is set to delete messages
 func (r Rule) SaveAttachments() bool {
 	return strings.Contains(r.Actions, "save_attachments")
+}
+
+// SaveAttachments returns whether a rule is set to delete messages
+func (r Rule) ExportMailbox() bool {
+	return strings.Contains(r.Actions, "export_mailbox")
 }

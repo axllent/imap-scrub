@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/emersion/go-imap"
+	mboxlib "github.com/emersion/go-mbox"
 )
 
 var resultCount = 1
@@ -152,4 +153,35 @@ func SaveAttachment(b []byte, emailAddress, fileName string, timestamp time.Time
 	Log.NoticeF(" - Saved %s/%s (%s)", emailAddress, hashed, ByteCountSI(bytes))
 
 	return nil
+}
+
+func CreateMBOX(mailboxName string) (*mboxlib.Writer, error) {
+	//func CreateMBOX(mailboxName string) (*os.File, error) {
+	var mailboxParts = strings.Split(mailboxName, "/")
+
+	outDir := path.Join(Config.SavePath, path.Join(mailboxParts...))
+	if err := CreateDir(outDir); err != nil {
+		return nil, err
+	}
+
+	outFile := path.Join(outDir, "mbox")
+	if FileExists(outFile) {
+		Log.WarningF(" - File '%s/%s' already exists", outDir, "mbox")
+		return nil, fmt.Errorf("Filename exists")
+	}
+
+	file, err := os.OpenFile(
+		outFile,
+		os.O_WRONLY|os.O_TRUNC|os.O_CREATE,
+		0664,
+	)
+	if err != nil {
+		return nil, err
+	}
+	//defer file.Close()
+
+	mboxWriter := mboxlib.NewWriter(file)
+
+	return mboxWriter, nil
+	//return file, nil
 }

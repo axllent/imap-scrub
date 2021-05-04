@@ -13,6 +13,7 @@ import (
 	"github.com/emersion/go-imap"
 	move "github.com/emersion/go-imap-move"
 	"github.com/emersion/go-imap/client"
+	mboxlib "github.com/emersion/go-mbox"
 	"github.com/spf13/pflag"
 )
 
@@ -119,7 +120,7 @@ func main() {
 
 	for _, rule := range lib.Config.Rules {
 		// If we are removing or saving attachments, then pull the whole message in the search
-		if doActions && (rule.RemoveAttachments() || rule.SaveAttachments()) {
+		if doActions && (rule.RemoveAttachments() || rule.SaveAttachments() || rule.ExportMailbox()) {
 			headersOnly = false
 		}
 
@@ -140,6 +141,17 @@ func main() {
 
 		seqSet := new(imap.SeqSet)
 		now := time.Now()
+
+		// create mbox file
+		var mboxWriter *mboxlib.Writer
+		//var mboxWriter *os.File
+		if doActions && rule.ExportMailbox() {
+			mboxWriter, err = lib.CreateMBOX(rule.Mailbox)
+			if err != nil {
+				lib.Log.ErrorF(err.Error())
+				continue
+			}
+		}
 
 		// search criteria
 		crit := imap.SearchCriteria{}
@@ -228,8 +240,12 @@ func main() {
 			section.Specifier = imap.HeaderSpecifier
 		}
 
-		items := []imap.FetchItem{imap.FetchEnvelope, imap.FetchFlags, imap.FetchInternalDate, imap.FetchRFC822Size, section.FetchItem()}
-
+		var items []imap.FetchItem
+		if doActions && rule.ExportMailbox() {
+			items = []imap.FetchItem{imap.FetchItem("BODY.PEEK[]"), imap.FetchEnvelope, imap.FetchFlags, imap.FetchInternalDate, imap.FetchRFC822Size /*, section.FetchItem()*/}
+		} else {
+			items = []imap.FetchItem{imap.FetchEnvelope, imap.FetchFlags, imap.FetchInternalDate, imap.FetchRFC822Size, section.FetchItem()}
+		}
 		messages := make(chan *imap.Message, 1)
 
 		go func() {
@@ -248,8 +264,8 @@ func main() {
 
 			totalSize = totalSize + msg.Size
 
-			if doActions && (rule.RemoveAttachments() || rule.SaveAttachments()) {
-				raw, err := lib.HandleMessage(msg, rule)
+			if doActions && (rule.RemoveAttachments() || rule.SaveAttachments() || rule.ExportMailbox()) {
+				raw, err := lib.HandleMessage(msg, rule, mboxWriter)
 				if err != nil {
 					lib.Log.ErrorF("%s", err)
 					continue
@@ -295,9 +311,12 @@ func main() {
 				}
 			}
 		}
+		if doActions && rule.ExportMailbox() {
+			mboxWriter.Close()
+		}
 
 		if totalSize > 0 {
-			lib.Log.DebugF("=====\nTotal size: %s\n=====\n", lib.ByteCountSI(totalSize))
+			lib.Log.DebugF("=====\nTotal size: %s ( %d messages )\n=====\n", lib.ByteCountSI(totalSize), len(searchRes))
 		}
 	}
 }
