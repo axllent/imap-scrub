@@ -1,3 +1,4 @@
 /dist/
 /imap-scrub
 *.yml
+imap-scrub.code-workspace
