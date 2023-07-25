@@ -23,7 +23,7 @@ jobs:
     - uses: wangyoucao577/go-release-action@v1.30
       with:
         binary_name: "imap-scrub"
-        asset_name: "imap-scrub_${{ matrix.goos }}_${{ matrix.goarch }}"
+        asset_name: "imap-scrub-${{ matrix.goos }}-${{ matrix.goarch }}"
         extra_files: LICENSE README.md
         github_token: ${{ secrets.GITHUB_TOKEN }}
         md5sum: false
