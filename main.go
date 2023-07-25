@@ -1,3 +1,4 @@
+// Package main is the main application
 package main
 
 import (
@@ -146,7 +147,7 @@ func main() {
 
 		if !rule.IncludeUnread {
 			// only seen messages
-			sFilters = append(sFilters, "unread")
+			sFilters = append(sFilters, "read")
 			crit.WithFlags = []string{"\\Seen"}
 		}
 
