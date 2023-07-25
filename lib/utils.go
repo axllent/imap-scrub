@@ -1,7 +1,7 @@
 package lib
 
 import (
-	"crypto/sha1"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -106,28 +106,30 @@ func InStringSlice(val string, slice []string) bool {
 
 // SaveAttachment will save an attachment to <outdir>/<email>/<hash>-<filename>
 func SaveAttachment(b []byte, emailAddress, fileName string, timestamp time.Time) error {
-	fileName = filepath.Base(fileName)
+	fileName = path.Clean(filepath.Base(fileName))
 
 	if fileName == "" {
 		return fmt.Errorf("Filename empty, not saving")
 	}
 
-	h := sha1.New()
+	h := sha256.New()
 	h.Write(b)
-	hashb := h.Sum(nil)
+	hash := h.Sum(nil)
 
-	hashed := fmt.Sprintf("%x-%s", hashb[0:3], fileName)
+	hashed := fmt.Sprintf("%x-%s", hash[0:3], fileName)
 
-	outDir := path.Join(Config.SavePath, emailAddress)
+	outDir := path.Clean(path.Join(Config.SavePath, emailAddress))
 	if err := CreateDir(outDir); err != nil {
 		return err
 	}
 
-	outFile := path.Join(outDir, hashed)
+	outFile := path.Clean(path.Join(outDir, hashed))
 	if FileExists(outFile) {
 		Log.WarningF(" - %s/%s already exists", emailAddress, hashed)
 		return nil
 	}
+
+	// #nosec
 	file, err := os.OpenFile(
 		outFile,
 		os.O_WRONLY|os.O_TRUNC|os.O_CREATE,

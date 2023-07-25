@@ -49,7 +49,7 @@ func main() {
 	flag.BoolVarP(&update, "update", "u", false, "update to latest release version")
 	flag.BoolVarP(&showVersion, "version", "v", false, "show app version")
 
-	flag.Parse(os.Args[1:])
+	_ = flag.Parse(os.Args[1:])
 
 	// parse arguments
 	args := flag.Args()
