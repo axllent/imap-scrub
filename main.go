@@ -48,6 +48,8 @@ func main() {
 	flag.BoolVarP(&printConfig, "print-config", "p", false, "print config")
 	flag.BoolVarP(&update, "update", "u", false, "update to latest release version")
 	flag.BoolVarP(&showVersion, "version", "v", false, "show app version")
+	// avoid 'pflag: help requested' error, as help will be defined later by cobra cmd.Execute()
+	flag.BoolP("help", "h", false, "")
 
 	_ = flag.Parse(os.Args[1:])
 
@@ -82,7 +84,7 @@ func main() {
 
 	if len(args) != 1 {
 		flag.Usage()
-		os.Exit(1)
+		os.Exit(0)
 	}
 
 	configFile = args[0]

@@ -148,13 +148,13 @@ func GithubUpdate(repo, appName, currentVersion string) (string, error) {
 		return "", err
 	}
 
-	newExec := filepath.Join(tmpDir, "mailpit")
+	newExec := filepath.Join(tmpDir, "imap-scrub")
 
 	if runtime.GOOS == "windows" {
 		if _, err := Unzip(outFile, tmpDir); err != nil {
 			return "", err
 		}
-		newExec = filepath.Join(tmpDir, "mailpit.exe")
+		newExec = filepath.Join(tmpDir, "imap-scrub.exe")
 	} else {
 		if err := TarGZExtract(outFile, tmpDir); err != nil {
 			return "", err
@@ -174,6 +174,8 @@ func GithubUpdate(repo, appName, currentVersion string) (string, error) {
 	if err := cmd.Run(); err != nil {
 		return "", err
 	}
+
+	fmt.Println("ok")
 
 	// get the running binary
 	oldExec, err := os.Executable()
