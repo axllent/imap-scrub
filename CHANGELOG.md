@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.0.4]
+
+- Fix confusing include_unread output (#5)
+- Code cleanup
+- Add GitHub actions workflow
+- New internal self-updater
+- Update Go modules
+
+
 ## [0.0.3]
 
 - Upgrade modules / dependencies
