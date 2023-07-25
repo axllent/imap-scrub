@@ -1,8 +1,10 @@
+// Package lib contains various libs used within the main app
 package lib
 
 import (
 	"io/ioutil"
 	"os"
+	"path"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -49,6 +51,8 @@ type Rule struct {
 
 // ReadConfig reads & parses the config into global config
 func ReadConfig(file string) {
+	file = path.Clean(file)
+	// #nosec
 	yamlData, err := ioutil.ReadFile(file)
 	if err != nil {
 		panic(err)
@@ -111,11 +115,6 @@ func ReadConfig(file string) {
 			os.Exit(2)
 		}
 	}
-
-	// if len(Config.Rules) == 0 {
-	// 	Log.Error("You must have at least one rule")
-	// 	os.Exit(2)
-	// }
 }
 
 // Delete returns whether a rule is set to delete messages

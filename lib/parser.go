@@ -129,8 +129,8 @@ func HandleMessage(msg *imap.Message, rule Rule) (string, error) {
 				if err != nil {
 					return "", err
 				}
-				w.Write(b)
-				w.Close()
+				_, _ = w.Write(b)
+				_ = w.Close()
 			} else if strings.HasPrefix(ct, "image/") {
 				// inline image
 				cd := p.Header.Get("Content-Disposition")
@@ -164,7 +164,7 @@ func HandleMessage(msg *imap.Message, rule Rule) (string, error) {
 
 		case *mail.AttachmentHeader:
 			if !inlineClosed {
-				iw.Close() // ensures that no further inline html/text can be written
+				_ = iw.Close() // ensures that no further inline html/text can be written
 				inlineClosed = true
 			}
 			filename, err := h.Filename()
@@ -200,7 +200,7 @@ func HandleMessage(msg *imap.Message, rule Rule) (string, error) {
 	}
 
 	if !inlineClosed {
-		iw.Close() // ensures that no further inline html/text can be written
+		_ = iw.Close() // ensures that no further inline html/text can be written
 	}
 
 	if len(deleted) > 0 {
@@ -230,8 +230,8 @@ func HandleMessage(msg *imap.Message, rule Rule) (string, error) {
 		if _, err := aw.Write([]byte(attachmentText)); err != nil {
 			return "", err
 		}
-		aw.Close()
-		mw.Close()
+		_ = aw.Close()
+		_ = mw.Close()
 	}
 
 	if msgParts == 0 {

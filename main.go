@@ -1,3 +1,4 @@
+// Package main is the main application
 package main
 
 import (
@@ -5,11 +6,12 @@ import (
 	"fmt"
 	"net/textproto"
 	"os"
+	"runtime"
 	"strings"
 	"time"
 
-	"github.com/axllent/ghru"
 	"github.com/axllent/imap-scrub/lib"
+	"github.com/axllent/imap-scrub/lib/updater"
 	"github.com/emersion/go-imap"
 	move "github.com/emersion/go-imap-move"
 	"github.com/emersion/go-imap/client"
@@ -47,26 +49,34 @@ func main() {
 	flag.BoolVarP(&update, "update", "u", false, "update to latest release version")
 	flag.BoolVarP(&showVersion, "version", "v", false, "show app version")
 
-	flag.Parse(os.Args[1:])
+	_ = flag.Parse(os.Args[1:])
 
 	// parse arguments
 	args := flag.Args()
 
 	if showVersion {
-		lib.Log.InfoF("Version: %s", appVersion)
-		latest, _, _, err := ghru.Latest("axllent/imap-scrub", "imap-scrub")
-		if err == nil && ghru.GreaterThan(latest, appVersion) {
-			lib.Log.InfoF("Update available: %s\nRun `%s -u` to update.", latest, os.Args[0])
+		fmt.Printf("%s %s compiled with %s on %s/%s\n",
+			os.Args[0], appVersion, runtime.Version(), runtime.GOOS, runtime.GOARCH)
+
+		latest, _, _, err := updater.GithubLatest("axllent/imap-scrub", "imap-scrub")
+		if err == nil && updater.GreaterThan(latest, appVersion) {
+			fmt.Printf(
+				"\nUpdate available: %s\nRun `%s version -u` to update (requires read/write access to install directory).\n",
+				latest,
+				os.Args[0],
+			)
 		}
 		os.Exit(0)
 	}
 
 	if update {
-		rel, err := ghru.Update("axllent/imap-scrub", "imap-scrub", appVersion)
+		rel, err := updater.GithubUpdate("axllent/imap-scrub", "imap-scrub", appVersion)
 		if err != nil {
-			lib.Log.Error(err.Error())
+			fmt.Println(err.Error())
+			os.Exit(1)
 		}
-		lib.Log.InfoF("Updated %s to version %s", os.Args[0], rel)
+
+		fmt.Printf("Updated %s to version %s\n", os.Args[0], rel)
 		os.Exit(0)
 	}
 
@@ -146,7 +156,7 @@ func main() {
 
 		if !rule.IncludeUnread {
 			// only seen messages
-			sFilters = append(sFilters, "unread")
+			sFilters = append(sFilters, "read")
 			crit.WithFlags = []string{"\\Seen"}
 		}
 
