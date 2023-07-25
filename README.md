@@ -4,7 +4,7 @@
 
 A command-line utility (Linux, Mac & Windows) to reduce the size of your IMAP mailbox through a series of pre-defined rules. Each rule contain a series of search modifiers, and one or two actions (`delete`, `remove_attachments`, `save_attachments`).
 
-I wrote this tool because I receive many emails with attachments that I need for a limited time only. After a year or two, these attachments do nothing more than take up space, however I did not want to just delete the emails themselves as many contain information that I would rather keep. In another example, certain emails I just do not want to keep at all after a certain period (social media noticiations etc).
+I wrote this tool because I receive many emails with attachments that I need for a limited time only. After a year or two, these attachments do nothing more than take up space, however I did not want to just delete the emails themselves as many contain information that I would rather keep. In another example, certain emails I just do not want to keep at all after a certain period (social media notifications etc).
 
 
 ## Usage options
@@ -55,7 +55,7 @@ See [All yaml config options](#all-yaml-config-options) below for more info.
 ## Installing
 
 Download the [latest binary release](https://github.com/axllent/imap-scrub/releases/latest) for your system, 
-or build from source `go get -u github.com/axllent/imap-scrub`(go >= 1.11 required)
+or build from source `go install github.com/axllent/imap-scrub@latest`(go >= 1.11 required)
 
 
 ## All yaml config options
@@ -80,7 +80,7 @@ rules:
     text:            string # match email message
     actions:         string # see below
     include_unread:  false  # include unread messages (default false)
-    include_starred: false  # include starrted mesages (default false)
+    include_starred: false  # include starred messages (default false)
 ```
 
 
@@ -93,7 +93,7 @@ On Gmail this is possibly `[Gmail]/All Mail` or `[Google Mail]/All Mail`, but ma
 
 ### Option: `use_trash`
 
-If `use_trash` is set to `true`, and your IMAP returns a trash mailbox, then deleted mesages will be moved into this mailbox. **Note** that Gmail does not support IMAP delete, so `use_trash` will always be set to `true` for Gmail.
+If `use_trash` is set to `true`, and your IMAP returns a trash mailbox, then deleted messages will be moved into this mailbox. **Note** that Gmail does not support IMAP delete, so `use_trash` will always be set to `true` for Gmail.
 
 
 ### Option: `actions`
@@ -104,6 +104,6 @@ There are three possible actions, namely:
 - `remove_attachments` will remove the all attachments and inline images from the original email 
 - `delete` will simply delete the email
 
-The `actions:` config may include a combination of `save_attachments` and one other (comma-separated), eg :`actions: save_attachments, remove_atachments`. 
+The `actions:` config may include a combination of `save_attachments` and one other (comma-separated), eg :`actions: save_attachments, remove_attachments`. 
 
 **Note** that you cannot combine `remove_attachments` and `delete`.
