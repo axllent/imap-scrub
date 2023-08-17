@@ -20,7 +20,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - uses: wangyoucao577/go-release-action@v1.30
+    - uses: wangyoucao577/go-release-action@v1.39
       with:
         binary_name: "imap-scrub"
         asset_name: "imap-scrub-${{ matrix.goos }}-${{ matrix.goarch }}"
