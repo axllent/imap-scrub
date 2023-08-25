@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"regexp"
 	"strings"
 	"time"
@@ -26,9 +25,6 @@ func HandleMessage(msg *imap.Message, rule Rule) (string, error) {
 	var section imap.BodySectionName
 
 	imap.CharsetReader = charset.Reader
-	// imap.Char
-	// charset.RegisterEncoding("windows-1252", charmap.Windows1252)
-	// imap.Cha
 
 	if msg == nil {
 		return "", fmt.Errorf("Server didn't returned message")
@@ -125,7 +121,7 @@ func HandleMessage(msg *imap.Message, rule Rule) (string, error) {
 					}
 				}
 
-				b, err := ioutil.ReadAll(p.Body)
+				b, err := io.ReadAll(p.Body)
 				if err != nil {
 					return "", err
 				}
@@ -145,7 +141,7 @@ func HandleMessage(msg *imap.Message, rule Rule) (string, error) {
 
 				filename := re.FindStringSubmatch(cd)[1]
 
-				b, err := ioutil.ReadAll(p.Body)
+				b, err := io.ReadAll(p.Body)
 				if err != nil {
 					return "", err
 				}
@@ -181,7 +177,7 @@ func HandleMessage(msg *imap.Message, rule Rule) (string, error) {
 				filename = "text.txt"
 			}
 
-			b, _ := ioutil.ReadAll(p.Body)
+			b, _ := io.ReadAll(p.Body)
 
 			if strings.Contains(rule.Actions, "save_attachment") {
 				if err := SaveAttachment(b, emailAddress, filename, msg.Envelope.Date); err != nil {

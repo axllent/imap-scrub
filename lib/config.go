@@ -2,7 +2,6 @@
 package lib
 
 import (
-	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -53,7 +52,7 @@ type Rule struct {
 func ReadConfig(file string) {
 	file = path.Clean(file)
 	// #nosec
-	yamlData, err := ioutil.ReadFile(file)
+	yamlData, err := os.ReadFile(file)
 	if err != nil {
 		panic(err)
 	}
