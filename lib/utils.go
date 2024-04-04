@@ -105,11 +105,12 @@ func InStringSlice(val string, slice []string) bool {
 }
 
 // SaveAttachment will save an attachment to <outdir>/<email>/<hash>-<filename>
-func SaveAttachment(b []byte, emailAddress, fileName string, timestamp time.Time) error {
+// returns the output file path and/or error
+func SaveAttachment(b []byte, emailAddress, fileName string, timestamp time.Time) (string, error) {
 	fileName = path.Clean(filepath.Base(fileName))
 
 	if fileName == "" {
-		return fmt.Errorf("Filename empty, not saving")
+		return "", fmt.Errorf("Filename empty, not saving")
 	}
 
 	h := sha256.New()
@@ -120,13 +121,13 @@ func SaveAttachment(b []byte, emailAddress, fileName string, timestamp time.Time
 
 	outDir := path.Clean(path.Join(Config.SavePath, emailAddress))
 	if err := CreateDir(outDir); err != nil {
-		return err
+		return "", err
 	}
 
 	outFile := path.Clean(path.Join(outDir, hashed))
 	if FileExists(outFile) {
-		Log.WarningF(" - %s/%s already exists", emailAddress, hashed)
-		return nil
+		Log.WarningF(" - %s already exists", outFile)
+		return outFile, nil
 	}
 
 	// #nosec
@@ -136,14 +137,14 @@ func SaveAttachment(b []byte, emailAddress, fileName string, timestamp time.Time
 		0664,
 	)
 	if err != nil {
-		return err
+		return outFile, err
 	}
 	defer file.Close()
 
 	// Write bytes to file
 	bytesWritten, err := file.Write(b)
 	if err != nil {
-		return err
+		return outFile, err
 	}
 	// write a copy of the attachment
 	bytes := uint32(bytesWritten)
@@ -151,7 +152,7 @@ func SaveAttachment(b []byte, emailAddress, fileName string, timestamp time.Time
 	// set timestamp
 	_ = os.Chtimes(outFile, timestamp, timestamp)
 
-	Log.NoticeF(" - Saved %s/%s (%s)", emailAddress, hashed, ByteCountSI(bytes))
+	Log.NoticeF(" - Saved %s (%s)", outFile, ByteCountSI(bytes))
 
-	return nil
+	return outFile, nil
 }

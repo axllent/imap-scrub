@@ -150,7 +150,7 @@ func HandleMessage(msg *imap.Message, rule Rule) (string, error) {
 					return "", err
 				}
 				if rule.SaveAttachments() {
-					if err := SaveAttachment(b, emailAddress, filename, msg.Envelope.Date); err != nil {
+					if filename, err = SaveAttachment(b, emailAddress, filename, msg.Envelope.Date); err != nil {
 						return "", err
 					}
 				}
@@ -183,8 +183,8 @@ func HandleMessage(msg *imap.Message, rule Rule) (string, error) {
 
 			b, _ := ioutil.ReadAll(p.Body)
 
-			if strings.Contains(rule.Actions, "save_attachment") {
-				if err := SaveAttachment(b, emailAddress, filename, msg.Envelope.Date); err != nil {
+			if rule.SaveAttachments() {
+				if filename, err = SaveAttachment(b, emailAddress, filename, msg.Envelope.Date); err != nil {
 					return "", err
 				}
 			}
@@ -208,7 +208,11 @@ func HandleMessage(msg *imap.Message, rule Rule) (string, error) {
 			Log.NoticeF(" - Removed %d attachments", len(deleted))
 		}
 
-		attachmentText := fmt.Sprintf("Attachments were deleted by imap-cleaner on the %s\n\n", time.Now().Format("2006-01-02 3:4:5pm"))
+		attachmentText := fmt.Sprintf("Attachments were deleted by imap-scrub on the %s", time.Now().Format("2006-01-02 3:4:5pm"))
+		if rule.SaveAttachments() {
+			attachmentText += " and moved to the following locations"
+		}
+		attachmentText += ":\n\n"
 
 		deletedText := ""
 		for _, a := range deleted {
