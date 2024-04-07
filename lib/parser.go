@@ -65,9 +65,6 @@ func HandleMessage(msg *imap.Message, rule Rule) (string, error) {
 
 	inlineClosed := false
 
-	// count the number of message parts. If message has none, return error
-	msgParts := 0
-
 	emailAddress := "no-email"
 	if len(froms) > 0 {
 		emailAddress = froms[0].Address()
@@ -89,8 +86,6 @@ func HandleMessage(msg *imap.Message, rule Rule) (string, error) {
 		switch h := p.Header.(type) {
 		case *mail.InlineHeader:
 			ct := p.Header.Get("Content-Type")
-
-			msgParts++
 
 			if strings.HasPrefix(ct, "text") {
 				var th mail.InlineHeader
@@ -189,8 +184,6 @@ func HandleMessage(msg *imap.Message, rule Rule) (string, error) {
 				}
 			}
 
-			msgParts++
-
 			ct := p.Header.Get("Content-Type")
 
 			size := ByteCountSI(uint32(len(b)))
@@ -238,7 +231,7 @@ func HandleMessage(msg *imap.Message, rule Rule) (string, error) {
 		_ = mw.Close()
 	}
 
-	if msgParts == 0 {
+	if len(deleted) == 0 {
 		// github.com/emersion/go-message/mail - This package assumes that a mail message contains
 		// one or more text parts and zero or more attachment parts.
 		// we did not find any message parts (inline text only?)
