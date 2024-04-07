@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.5]
+
+- Write full output paths of saved attachments into "%d-attachments-deleted.txt"
+- Bump minimum Go version, update Go modules
+- Replace deprecated ioutil references
+
+
 ## [0.0.4]
 
 - Fix confusing include_unread output (#5)
