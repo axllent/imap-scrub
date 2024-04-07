@@ -5,7 +5,7 @@ import (
 	"github.com/emersion/go-imap/client"
 )
 
-// ListMailboxes returns a list of Mailboxs on the server
+// ListMailboxes returns a list of Mailboxes on the server
 func ListMailboxes(cReader *client.Client) {
 	mailboxes := make(chan *imap.MailboxInfo, 10)
 	done := make(chan error, 1)
@@ -25,7 +25,7 @@ func ListMailboxes(cReader *client.Client) {
 	}
 }
 
-// DetectTrash will return the trash folder of a Gmail account, if appliccable
+// DetectTrash will return the trash folder of a Gmail account, if applicable
 // Gmail only supports moving to the trash
 func DetectTrash(cReader *client.Client) (string, error) {
 	if !Config.UseTrash && Config.Host != "imap.gmail.com" {

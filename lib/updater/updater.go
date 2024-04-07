@@ -175,8 +175,6 @@ func GithubUpdate(repo, appName, currentVersion string) (string, error) {
 		return "", err
 	}
 
-	fmt.Println("ok")
-
 	// get the running binary
 	oldExec, err := os.Executable()
 	if err != nil {

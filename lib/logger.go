@@ -20,7 +20,7 @@ func initTWLogger() *logger.Logger {
 
 	logLevel := logger.DebugLevel
 
-	l, _ = logger.New("tripwire", 1, os.Stdout, logLevel)
+	l, _ = logger.New("imap-scrub", 1, os.Stdout, logLevel)
 	l.SetFormat("%{message}")
 
 	return l
