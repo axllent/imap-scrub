@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.0.6]
+
+- Avoid altering messages that don't have attachments (#7) thanks to @michalfapso
+
+
 ## [0.0.5]
 
 - Write full output paths of saved attachments into "%d-attachments-deleted.txt"
