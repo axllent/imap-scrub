@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"regexp"
 	"strings"
 	"time"
 
@@ -21,38 +20,38 @@ type DeletedAttachment struct {
 }
 
 // HandleMessage will process an imap message
-func HandleMessage(msg *imap.Message, rule Rule) (string, error) {
+func HandleMessage(msg *imap.Message, rule Rule) (string, int, error) {
 	var section imap.BodySectionName
 
 	imap.CharsetReader = charset.Reader
 
 	if msg == nil {
-		return "", fmt.Errorf("Server didn't returned message")
+		return "", 0, fmt.Errorf("Server didn't returned message")
 	}
 
 	r := msg.GetBody(&section)
 	if r == nil {
-		return "", fmt.Errorf("Server didn't returned message body")
+		return "", 0, fmt.Errorf("Server didn't returned message body")
 	}
 
 	// Create a new mail reader
 	mr, err := mail.CreateReader(r)
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
 
 	var b bytes.Buffer
 
 	mw, err := mail.CreateWriter(&b, mr.Header)
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
 
 	defer mw.Close()
 
 	iw, err := mw.CreateInline()
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
 
 	deleted := []DeletedAttachment{}
@@ -77,9 +76,9 @@ func HandleMessage(msg *imap.Message, rule Rule) (string, error) {
 		} else if err != nil {
 			// unhandled characters etc
 			if strings.Contains(err.Error(), "unexpected EOF") {
-				return "", fmt.Errorf("No attachments, skipping")
+				return "", 0, fmt.Errorf("No attachments, skipping")
 			}
-			return "", err
+			return "", 0, err
 		}
 
 		switch h := p.Header.(type) {
@@ -104,7 +103,7 @@ func HandleMessage(msg *imap.Message, rule Rule) (string, error) {
 				if err != nil {
 					// eg: unhandled charset "windows-1252"
 					if !strings.Contains(err.Error(), "charset") {
-						return "", err
+						return "", 0, err
 					}
 
 					// bit of a hack - change charset to utf-8 if unsupported
@@ -117,37 +116,37 @@ func HandleMessage(msg *imap.Message, rule Rule) (string, error) {
 
 					w, err = iw.CreatePart(th)
 					if err != nil {
-						return "", err
+						return "", 0, err
 					}
 				}
 
 				b, err := io.ReadAll(p.Body)
 				if err != nil {
-					return "", err
+					return "", 0, err
 				}
 				_, _ = w.Write(b)
 				_ = w.Close()
 			} else if strings.HasPrefix(ct, "image/") {
-				// inline image
-				cd := p.Header.Get("Content-Disposition")
-				if !strings.HasPrefix(cd, "inline; filename=\"") {
-					continue
-				}
-				// Crude filename parsing
-				var re = regexp.MustCompile(`(?U)^inline; filename="(.*)"`)
-				if len(re.FindStringIndex(cd)) == 0 {
-					continue
+				// filename logic taken from https://github.com/emersion/go-message/blob/master/mail/attachment.go
+				_, params, err := h.ContentDisposition()
+				if err != nil {
+					return "", 0, err
 				}
 
-				filename := re.FindStringSubmatch(cd)[1]
+				filename, ok := params["filename"]
+				if !ok {
+					// Using "name" in Content-Type is discouraged
+					_, params, err = h.ContentType()
+					filename = params["name"]
+				}
 
 				b, err := io.ReadAll(p.Body)
 				if err != nil {
-					return "", err
+					return "", 0, err
 				}
 				if rule.SaveAttachments() {
 					if filename, err = SaveAttachment(b, emailAddress, filename, msg.Envelope.Date); err != nil {
-						return "", err
+						return "", 0, err
 					}
 				}
 
@@ -165,7 +164,7 @@ func HandleMessage(msg *imap.Message, rule Rule) (string, error) {
 			}
 			filename, err := h.Filename()
 			if err != nil {
-				return "", err
+				return "", 0, err
 			}
 
 			if strings.HasSuffix(filename, "-attachments-deleted.txt") {
@@ -181,7 +180,7 @@ func HandleMessage(msg *imap.Message, rule Rule) (string, error) {
 
 			if rule.SaveAttachments() {
 				if filename, err = SaveAttachment(b, emailAddress, filename, msg.Envelope.Date); err != nil {
-					return "", err
+					return "", 0, err
 				}
 			}
 
@@ -224,11 +223,11 @@ func HandleMessage(msg *imap.Message, rule Rule) (string, error) {
 		aw, err := mw.CreateAttachment(ah)
 
 		if err != nil {
-			return "", err
+			return "", 0, err
 		}
 
 		if _, err := aw.Write([]byte(attachmentText)); err != nil {
-			return "", err
+			return "", 0, err
 		}
 		_ = aw.Close()
 		_ = mw.Close()
@@ -238,8 +237,8 @@ func HandleMessage(msg *imap.Message, rule Rule) (string, error) {
 		// github.com/emersion/go-message/mail - This package assumes that a mail message contains
 		// one or more text parts and zero or more attachment parts.
 		// we did not find any message parts (inline text only?)
-		return "", fmt.Errorf("No attachments")
+		return "", 0, fmt.Errorf("No attachments")
 	}
 
-	return b.String(), nil
+	return b.String(), len(deleted), nil
 }
