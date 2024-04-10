@@ -110,11 +110,11 @@ func main() {
 
 	// Login
 	if err := cReader.Login(lib.Config.User, lib.Config.Pass); err != nil {
-		lib.Log.ErrorF("%v", err)
+		lib.Log.Errorf("%v", err)
 		os.Exit(2)
 	}
 	if err := cWriter.Login(lib.Config.User, lib.Config.Pass); err != nil {
-		lib.Log.ErrorF("%v", err)
+		lib.Log.Errorf("%v", err)
 		os.Exit(2)
 	}
 
@@ -140,7 +140,7 @@ func main() {
 		// Select mailbox
 		mbox, err := cReader.Select(rule.Mailbox, true)
 		if err != nil {
-			lib.Log.ErrorF(err.Error())
+			lib.Log.Errorf(err.Error())
 			continue
 		}
 
@@ -212,7 +212,7 @@ func main() {
 		// search
 		searchRes, err := cReader.UidSearch(&crit)
 		if err != nil {
-			lib.Log.ErrorF(err.Error())
+			lib.Log.Errorf(err.Error())
 			continue
 		}
 
@@ -223,7 +223,7 @@ func main() {
 
 		_, err = cWriter.Select(rule.Mailbox, false)
 		if err != nil {
-			lib.Log.ErrorF(err.Error())
+			lib.Log.Errorf(err.Error())
 			continue
 		}
 
@@ -246,7 +246,7 @@ func main() {
 
 		go func() {
 			if err := cReader.UidFetch(seqSet, items, messages); err != nil {
-				lib.Log.ErrorF(err.Error())
+				lib.Log.Errorf(err.Error())
 				os.Exit(2)
 			}
 		}()
@@ -260,26 +260,35 @@ func main() {
 
 			totalSize = totalSize + msg.Size
 
+			deletedAttachments := 0
+
 			if doActions && (rule.RemoveAttachments() || rule.SaveAttachments()) {
-				raw, err := lib.HandleMessage(msg, rule)
+				raw, attachments, err := lib.HandleMessage(msg, rule)
 				if err != nil {
-					lib.Log.ErrorF("%s", err)
+					lib.Log.Errorf("%s", err)
+					continue
+				}
+
+				if attachments == 0 {
+					lib.Log.Warningf("no attachments detected")
 					continue
 				}
 
 				// cReader.SetDebug(os.Stdout)
 				literal := bytes.NewBufferString(raw)
 
-				if rule.RemoveAttachments() {
+				if attachments > 0 && rule.RemoveAttachments() {
 					// create a new message and copy envelope & flags
 					if err := cWriter.Append(rule.Mailbox, msg.Flags, msg.Envelope.Date, literal); err != nil {
-						lib.Log.ErrorF(err.Error())
+						lib.Log.Errorf(err.Error())
 						continue
 					}
 				}
+
+				deletedAttachments = attachments
 			}
 
-			if doActions && (rule.RemoveAttachments() || rule.Delete()) {
+			if doActions && (rule.RemoveAttachments() && deletedAttachments > 0 || rule.Delete()) {
 				seqSet := new(imap.SeqSet)
 				seqSet.AddNum(msg.Uid)
 
@@ -287,7 +296,7 @@ func main() {
 					// move to Bin
 					mover := move.NewClient(cWriter)
 					if err := mover.UidMove(seqSet, trashMailbox); err != nil {
-						lib.Log.ErrorF(err.Error())
+						lib.Log.Errorf(err.Error())
 						continue
 					}
 					lib.Log.NoticeF(" - Moved original message to trash")
@@ -296,11 +305,11 @@ func main() {
 					item := imap.FormatFlagsOp(imap.AddFlags, true)
 					flags := []interface{}{imap.DeletedFlag}
 					if err := cWriter.UidStore(seqSet, item, flags, nil); err != nil {
-						lib.Log.ErrorF(err.Error())
+						lib.Log.Errorf(err.Error())
 						continue
 					}
 					if err := cWriter.Expunge(nil); err != nil {
-						lib.Log.ErrorF(err.Error())
+						lib.Log.Errorf(err.Error())
 						continue
 					}
 					lib.Log.NoticeF(" - Deleted original message")
