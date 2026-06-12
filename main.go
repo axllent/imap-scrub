@@ -152,6 +152,7 @@ func main() {
 
 		seqSet := new(imap.SeqSet)
 		now := time.Now()
+		olderThanCutoff := time.Time{}
 
 		// search criteria
 		crit := imap.SearchCriteria{}
@@ -170,7 +171,10 @@ func main() {
 
 		if rule.OlderThan > 0 {
 			sFilters = append(sFilters, fmt.Sprintf("older: %d days", rule.OlderThan))
-			crit.SentBefore = now.Add(-(time.Duration(rule.OlderThan) * 24 * time.Hour))
+			// IMAP BEFORE uses the server's internal date, which is safer for cleanup
+			// than trusting the sender-controlled Date header.
+			olderThanCutoff = beginningOfDay(now.AddDate(0, 0, -rule.OlderThan))
+			crit.Before = olderThanCutoff
 		}
 
 		if rule.Size > 0 {
@@ -255,6 +259,12 @@ func main() {
 		var totalSize uint32
 
 		for msg := range messages {
+			// Treat the server-side search as a broad filter and verify the internal
+			// date again before showing or mutating the message.
+			if !olderThanCutoff.IsZero() && !messageIsOlderThan(msg, olderThanCutoff) {
+				continue
+			}
+
 			// print search result
 			lib.PrintHdrDetails(msg)
 
@@ -321,4 +331,32 @@ func main() {
 			lib.Log.DebugF("=====\nTotal size: %s\n=====\n", lib.ByteCountSI(totalSize))
 		}
 	}
+}
+
+// beginningOfDay returns the local midnight for the provided time.
+func beginningOfDay(t time.Time) time.Time {
+	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
+}
+
+// messageIsOlderThan checks a fetched message against the cleanup cutoff.
+func messageIsOlderThan(msg *imap.Message, cutoff time.Time) bool {
+	// Messages without an internal date cannot be safely matched against older_than.
+	if msg.InternalDate.IsZero() {
+		lib.Log.WarningF("Skipping UID %d: message has no internal date", msg.Uid)
+		return false
+	}
+
+	// Keep only messages strictly older than the cutoff; anything on or after it
+	// must be left untouched.
+	if !msg.InternalDate.Before(cutoff) {
+		lib.Log.DebugF(
+			"Skipping UID %d: internal date %s is not before %s",
+			msg.Uid,
+			msg.InternalDate.Format(time.RFC3339),
+			cutoff.Format(time.RFC3339),
+		)
+		return false
+	}
+
+	return true
 }
