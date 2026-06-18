@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.7]
+
+- Fix `older_than` to use the IMAP internal delivery date instead of the sender-controlled `Date` header
+- Normalize the cutoff to local midnight and re-verify each fetched message before delete or attachment actions (IMAP `BEFORE` is date-only and can return borderline matches)
+- Clarify debug output when messages are skipped: show internal date and cutoff in local time, and note when the envelope `Date` header differs
+
+
 ## [0.0.6]
 
 - Avoid altering messages that don't have attachments (#7) thanks to @michalfapso

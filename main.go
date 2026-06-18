@@ -152,6 +152,7 @@ func main() {
 
 		seqSet := new(imap.SeqSet)
 		now := time.Now()
+		// olderThanCutoff is set when a rule uses older_than; zero means no date filter.
 		olderThanCutoff := time.Time{}
 
 		// search criteria
@@ -171,8 +172,11 @@ func main() {
 
 		if rule.OlderThan > 0 {
 			sFilters = append(sFilters, fmt.Sprintf("older: %d days", rule.OlderThan))
-			// IMAP BEFORE uses the server's internal date, which is safer for cleanup
-			// than trusting the sender-controlled Date header.
+			// older_than is a calendar-day rule: keep messages delivered before local
+			// midnight on the day that falls N days before today.
+			// IMAP BEFORE uses internal date (server delivery time), not the sender's
+			// Date header. The protocol only supports whole dates, so the server search
+			// is a broad filter; messageIsOlderThan() re-checks each result precisely.
 			olderThanCutoff = beginningOfDay(now.AddDate(0, 0, -rule.OlderThan))
 			crit.Before = olderThanCutoff
 		}
@@ -259,8 +263,9 @@ func main() {
 		var totalSize uint32
 
 		for msg := range messages {
-			// Treat the server-side search as a broad filter and verify the internal
-			// date again before showing or mutating the message.
+			// IMAP BEFORE is date-only and may return messages near the cutoff
+			// (e.g. UTC calendar day differs from local). Skip anything not strictly
+			// older than the cutoff before listing or mutating.
 			if !olderThanCutoff.IsZero() && !messageIsOlderThan(msg, olderThanCutoff) {
 				continue
 			}
@@ -333,12 +338,14 @@ func main() {
 	}
 }
 
-// beginningOfDay returns the local midnight for the provided time.
+// beginningOfDay returns local midnight for t, preserving its location.
+// older_than cutoffs are anchored to the user's calendar day, not UTC.
 func beginningOfDay(t time.Time) time.Time {
 	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
 }
 
-// messageIsOlderThan checks a fetched message against the cleanup cutoff.
+// messageIsOlderThan returns true when msg was delivered strictly before cutoff.
+// cutoff is always local midnight from beginningOfDay().
 func messageIsOlderThan(msg *imap.Message, cutoff time.Time) bool {
 	// Messages without an internal date cannot be safely matched against older_than.
 	if msg.InternalDate.IsZero() {
@@ -349,12 +356,30 @@ func messageIsOlderThan(msg *imap.Message, cutoff time.Time) bool {
 	// Keep only messages strictly older than the cutoff; anything on or after it
 	// must be left untouched.
 	if !msg.InternalDate.Before(cutoff) {
+		// Log in the cutoff timezone so internal date and cutoff are comparable.
+		// RFC3339 mixed UTC/local was confusing (e.g. "June 14Z" vs "June 15 +03").
+		loc := cutoff.Location()
+		const localFmt = "2006-01-02 15:04:05 MST"
+		internalLocal := msg.InternalDate.In(loc)
+		cutoffLocal := cutoff.In(loc)
 		lib.Log.DebugF(
-			"Skipping UID %d: internal date %s is not before %s",
+			"Skipping UID %d: internal date %s is not before older_than cutoff %s",
 			msg.Uid,
-			msg.InternalDate.Format(time.RFC3339),
-			cutoff.Format(time.RFC3339),
+			internalLocal.Format(localFmt),
+			cutoffLocal.Format(localFmt),
 		)
+		// The envelope Date header is what users see in mail clients; when it
+		// falls on a different local calendar day than internal date, explain why
+		// older_than still uses internal delivery time.
+		if msg.Envelope != nil && !msg.Envelope.Date.IsZero() {
+			envelopeLocal := msg.Envelope.Date.In(loc)
+			if envelopeLocal.Format("2006-01-02") != internalLocal.Format("2006-01-02") {
+				lib.Log.DebugF(
+					"  envelope Date header is %s (older_than uses internal delivery date, not Date header)",
+					envelopeLocal.Format(localFmt),
+				)
+			}
+		}
 		return false
 	}
 
