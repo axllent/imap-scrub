@@ -31,4 +31,4 @@ jobs:
         goos: ${{ matrix.goos }}
         goarch: ${{ matrix.goarch }}
         pre_command: export GO386=softfloat CGO_ENABLED=0
-        ldflags: -s -w -X "main.appVersion=${{ github.ref_name }}"
+        ldflags: -s -w

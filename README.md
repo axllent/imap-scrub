@@ -57,6 +57,32 @@ See [All yaml config options](#all-yaml-config-options) below for more info.
 Download the [latest binary release](https://github.com/axllent/imap-scrub/releases/latest) for your system, 
 or build from source `go install github.com/axllent/imap-scrub@latest`(go >= 1.11 required)
 
+### Building local binaries
+
+The build scripts create `amd64` binaries in the `dist` directory. They can be
+run from any working directory.
+
+On Windows:
+
+```bat
+scripts\build-windows.bat
+```
+
+On Linux:
+
+```sh
+bash scripts/build-linux.sh
+```
+
+On Linux using Docker:
+
+```sh
+bash scripts/build-linux-docker.sh
+```
+
+The application version is defined by `appVersion` in `main.go`. Update it before
+creating a new release; both local builds and GitHub release builds use this value.
+
 
 ## All yaml config options
 

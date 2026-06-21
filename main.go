@@ -18,12 +18,13 @@ import (
 	"github.com/spf13/pflag"
 )
 
+const appVersion = "0.0.8"
+
 var (
 	cReader       *client.Client
 	cWriter       *client.Client
 	doActions     bool
 	deleteActions bool
-	appVersion    = "dev"
 )
 
 func main() {

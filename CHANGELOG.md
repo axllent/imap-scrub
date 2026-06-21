@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.8]
+
+- Add local build scripts for Windows and Linux amd64 binaries
+- Add a Docker-based Linux build script
+- Use the application version from the source code for local and release builds
+
+
 ## [0.0.7]
 
 - Fix `older_than` to use the IMAP internal delivery date instead of the sender-controlled `Date` header
