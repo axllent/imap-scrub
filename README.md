@@ -1,6 +1,15 @@
 # IMAP-Scrub
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/axllent/imap-scrub)](https://goreportcard.com/report/github.com/axllent/imap-scrub)
+## This project is no longer maintained
+
+Please see [this thread](https://github.com/axllent/imap-scrub/issues/10) for more information and an alternative maintained version.
+
+---
+
+<details>
+<summary>View original README</summary>
+
+---
 
 A command-line utility (Linux, Mac & Windows) to reduce the size of your IMAP mailbox through a series of pre-defined rules. Each rule contain a series of search modifiers, and one or two actions (`delete`, `remove_attachments`, `save_attachments`).
 
@@ -107,3 +116,6 @@ There are three possible actions, namely:
 The `actions:` config may include a combination of `save_attachments` and one other (comma-separated), eg :`actions: save_attachments, remove_attachments`. 
 
 **Note** that you cannot combine `remove_attachments` and `delete`.
+
+
+</details>
