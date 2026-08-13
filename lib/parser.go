@@ -167,7 +167,11 @@ func HandleMessage(msg *imap.Message, rule Rule) (string, int, error) {
 				return "", 0, err
 			}
 
-			if strings.HasSuffix(filename, "-attachments-deleted.txt") {
+			// Skip S/MIME digital signatures and attachment logs
+			if strings.HasSuffix(filename, "-attachments-deleted.txt") ||
+				strings.EqualFold(filename, "smime.p7m") ||
+				strings.EqualFold(filename, "smime.p7s") ||
+				strings.EqualFold(filename, "smime.p7z") {
 				continue
 			}
 
